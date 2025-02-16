@@ -63,7 +63,7 @@ unsigned char buffer[BLOCK_SIZE];
 
   return SUCCESS;
 }
-
+*/
 int RecBuffer::setRecord(union Attribute *record, int slotNum)
 {
     // get the header using this.getHeader() function
@@ -81,7 +81,7 @@ int RecBuffer::setRecord(union Attribute *record, int slotNum)
        - each record will have size attrCount * ATTR_SIZE
        - slotMap will be of size slotCount
     */
-    /*
+    
     int recordSize = attrCount * ATTR_SIZE;
     unsigned char *slotPointer = buffer + (32 + slotCount + (recordSize * slotNum)); // calculate buffer + offset
 
@@ -91,7 +91,7 @@ int RecBuffer::setRecord(union Attribute *record, int slotNum)
     Disk::writeBlock(buffer, this->blockNum);
 
     return SUCCESS;
-}*/
+}
 
 //STAGE 3
 
