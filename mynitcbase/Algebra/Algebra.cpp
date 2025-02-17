@@ -35,6 +35,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
   if (srcRelId == E_RELNOTOPEN) {
     return E_RELNOTOPEN;
   }
+  
 
   //AttrCatEntry attrCatEntry;
   // get the attribute catalog entry for attr, using AttrCacheTable::getAttrcatEntry()

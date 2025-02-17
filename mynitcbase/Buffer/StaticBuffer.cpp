@@ -34,7 +34,7 @@ StaticBuffer::StaticBuffer() {
 
 
   StaticBuffer::~StaticBuffer() {
-    /*// Step 1: Write the blockAllocMap back to disk
+    // Step 1: Write the blockAllocMap back to disk
     // We assume that the blockAllocMap should be written to a specific block on disk (e.g., block number 0).
     int ret = Disk::writeBlock(blockAllocMap, 0);  // Adjust the block number for the allocation map
     if (ret != SUCCESS) {
@@ -57,7 +57,7 @@ StaticBuffer::StaticBuffer() {
             // After writing the block, mark it as no longer dirty
             metainfo[i].dirty = false;  // Buffer is no longer dirty after it's written to disk
         }
-    }*/
+    }
 }
 
 /*int StaticBuffer::getStaticBlockType(int blockNum) {
@@ -166,3 +166,20 @@ int StaticBuffer::getFreeBuffer(int blockNum) {
     return bufferNum;
 }
 
+int StaticBuffer::setDirtyBit(int blockNum){
+    // find the buffer index corresponding to the block using getBufferNum().
+    int bufferIndex=getBufferNum(blockNum);
+
+    // if block is not present in the buffer (bufferNum = E_BLOCKNOTINBUFFER)
+    //     return E_BLOCKNOTINBUFFER
+    if(bufferIndex==E_BLOCKNOTINBUFFER){
+      return E_BLOCKNOTINBUFFER;
+    }
+    if(bufferIndex==E_OUTOFBOUND){
+      return E_OUTOFBOUND;
+    }else{
+      metainfo[bufferIndex].dirty=true;
+    }
+    return SUCCESS;
+    
+}

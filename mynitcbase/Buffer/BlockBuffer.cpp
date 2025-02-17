@@ -64,34 +64,34 @@ unsigned char buffer[BLOCK_SIZE];
   return SUCCESS;
 }
 */
-int RecBuffer::setRecord(union Attribute *record, int slotNum)
-{
-    // get the header using this.getHeader() function
-    HeadInfo head;
-    BlockBuffer::getHeader(&head);
+// int RecBuffer::setRecord(union Attribute *record, int slotNum)
+// {
+//     // get the header using this.getHeader() function
+//     HeadInfo head;
+//     BlockBuffer::getHeader(&head);
 
-    int attrCount = head.numAttrs;
-    int slotCount = head.numSlots;
+//     int attrCount = head.numAttrs;
+//     int slotCount = head.numSlots;
 
-    // read the block at this.blockNum into a buffer
-    unsigned char buffer[BLOCK_SIZE];
-    Disk::readBlock(buffer, this->blockNum);
+//     // read the block at this.blockNum into a buffer
+//     unsigned char buffer[BLOCK_SIZE];
+//     Disk::readBlock(buffer, this->blockNum);
 
-    /* record at slotNum will be at offset HEADER_SIZE + slotMapSize + (recordSize * slotNum)
-       - each record will have size attrCount * ATTR_SIZE
-       - slotMap will be of size slotCount
-    */
+//     /* record at slotNum will be at offset HEADER_SIZE + slotMapSize + (recordSize * slotNum)
+//        - each record will have size attrCount * ATTR_SIZE
+//        - slotMap will be of size slotCount
+//     */
     
-    int recordSize = attrCount * ATTR_SIZE;
-    unsigned char *slotPointer = buffer + (32 + slotCount + (recordSize * slotNum)); // calculate buffer + offset
+//     int recordSize = attrCount * ATTR_SIZE;
+//     unsigned char *slotPointer = buffer + (32 + slotCount + (recordSize * slotNum)); // calculate buffer + offset
 
-    // load the record into the rec data structure
-    memcpy(slotPointer, record, recordSize);
+//     // load the record into the rec data structure
+//     memcpy(slotPointer, record, recordSize);
 
-    Disk::writeBlock(buffer, this->blockNum);
+//     Disk::writeBlock(buffer, this->blockNum);
 
-    return SUCCESS;
-}
+//     return SUCCESS;
+// }
 
 //STAGE 3
 
@@ -228,4 +228,54 @@ int RecBuffer::compareAttrs( Attribute attr1,  Attribute attr2, int attrType) {
     return 0;
     
 }
+//STAGE 5
+int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
+    unsigned char *bufferPtr;
+    /* get the starting address of the buffer containing the block
+       using loadBlockAndGetBufferPtr(&bufferPtr). */
+    int bufferNum=BlockBuffer::loadBlockAndGetBufferPtr(&bufferPtr);
+    if(bufferNum!=SUCCESS){
+      return bufferNum;
+    }
 
+
+    // if loadBlockAndGetBufferPtr(&bufferPtr) != SUCCESS
+        // return the value returned by the call.
+
+    /* get the header of the block using the getHeader() function */
+    HeadInfo head;
+    BlockBuffer::getHeader(&head);
+  
+    // get number of attributes in the block.
+    int attrCount=head.numAttrs;
+    int slotCount=head.numSlots;
+    // get the number of slots in the block.
+    if(slotNum>slotCount or slotNum<0){
+      return E_OUTOFBOUND;
+    }// if input slotNum is not in the permitted range return E_OUTOFBOUND.
+
+    /* offset bufferPtr to point to the beginning of the record at required
+       slot. the block contains the header, the slotmap, followed by all
+       the records. so, for example,
+       record at slot x will be at bufferPtr + HEADER_SIZE + (x*recordSize)
+       copy the record from `rec` to buffer using memcpy
+       (hint: a record will be of size ATTR_SIZE * numAttrs)
+    */
+  //  unsigned char buffer[BLOCK_SIZE];
+  // Disk::readBlock(buffer, this->blockNum);
+   int recordSize=attrCount*ATTR_SIZE;
+   unsigned char *slotPointer =bufferPtr +(32 + slotCount + (recordSize * slotNum));
+
+   memcpy(slotPointer,rec,recordSize);
+    // update dirty bit using setDirtyBit()
+    int ret=StaticBuffer::setDirtyBit(this->blockNum);
+    if(ret!=SUCCESS){
+      std::cout<<"something srong with the setDirty function";
+    }
+    /* (the above function call should not fail since the block is already
+       in buffer and the blockNum is valid. If the call does fail, there
+       exists some other issue in the code) */
+
+    // return SUCCESS
+    return SUCCESS;
+}

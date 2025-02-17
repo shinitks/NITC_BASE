@@ -485,6 +485,8 @@ RelCacheTable::relCache[relId] = nullptr;
     AttrCacheTable::attrCache[relId] = nullptr;
   // Update tableMetaInfo to set relId as a free slot
   tableMetaInfo[relId].free=true;
+  tableMetaInfo[relId].relName[0] = '\0';
+
 
   // Set the corresponding entries in the caches to nullptr
 
