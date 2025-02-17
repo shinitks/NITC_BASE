@@ -21,7 +21,15 @@ StaticBuffer::StaticBuffer() {
         // Copy the data from the block to the blockAllocMap
         memcpy(blockAllocMap, blockPtr, sizeof(blockAllocMap));
     }
+    
 */
+for (int i = 0, blockMapslot = 0; i < 4; i++) {
+    unsigned char buffer[BLOCK_SIZE];
+    Disk::readBlock(buffer, i);
+    for (int slot = 0; slot < BLOCK_SIZE; slot++, blockMapslot++) {
+      StaticBuffer::blockAllocMap[blockMapslot] = buffer[slot];
+    }
+  }
     // Step 2: Initialize metainfo array
     for (int i = 0; i < BUFFER_CAPACITY; i++) {
         metainfo[i].free = true;          // Mark the buffer as free
@@ -41,6 +49,13 @@ StaticBuffer::StaticBuffer() {
         std::cerr << "Failed to write the block allocation map to disk." << std::endl;
         // Handle the error as needed, possibly throwing an exception or returning
     }
+    for (int i = 0, blockMapslot = 0; i < 4; i++) {
+    unsigned char buffer[BLOCK_SIZE];
+    for (int slot = 0; slot < BLOCK_SIZE; slot++, blockMapslot++) {
+      buffer[slot] = blockAllocMap[blockMapslot];
+    }
+    Disk::writeBlock(buffer, i);
+  }
 
     // Step 2: Iterate through the metainfo entries and write dirty buffers back to disk
     for (int i = 0; i < BUFFER_CAPACITY; i++) {
