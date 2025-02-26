@@ -119,7 +119,7 @@ int StaticBuffer::getBufferNum(int blockNum) {
 
     // Step 2: Traverse through the metainfo array to find the buffer number
     for (int i = 0; i < BUFFER_CAPACITY; i++) {
-        if (metainfo[i].blockNum == blockNum) {
+        if (metainfo[i].blockNum == blockNum and metainfo[i].free==false) {
             // Block found in buffer, return the buffer index (i)
             return i;
         }

@@ -116,3 +116,14 @@ int RelCacheTable::setRelCatEntry(int relId, RelCatEntry *relCatBuf) {
 
   return SUCCESS;
 }
+void RelCacheTable::relCatEntryToRecord(RelCatEntry *relCatEntry,union Attribute record[RELCAT_NO_ATTRS])
+{
+	// TODO: fill the rest of the relCatEntry struct with the values 
+
+	strcpy(record[RELCAT_REL_NAME_INDEX].sVal, relCatEntry->relName);
+	record[RELCAT_NO_ATTRIBUTES_INDEX].nVal = (int)relCatEntry->numAttrs;
+	record[RELCAT_NO_RECORDS_INDEX].nVal = (int)relCatEntry->numRecs;
+	record[RELCAT_FIRST_BLOCK_INDEX].nVal = (int)relCatEntry->firstBlk;
+	record[RELCAT_LAST_BLOCK_INDEX].nVal = (int)relCatEntry->lastBlk;
+	record[RELCAT_NO_SLOTS_PER_BLOCK_INDEX].nVal = (int)relCatEntry->numSlotsPerBlk;
+}
