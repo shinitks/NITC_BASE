@@ -711,3 +711,97 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
 
     return SUCCESS;
 }
+
+
+int BlockAccess::project(int relId, Attribute *record) {
+    // get the previous search index of the relation relId from the relation
+    // cache (use RelCacheTable::getSearchIndex() function)
+ RecId* prevRecId=(RecId*)malloc(sizeof(RecId));
+    RelCacheTable::getSearchIndex(relId,prevRecId);
+    // declare block and slot which will be used to store the record id of the
+    // slot we need to check.
+    int block, slot;
+
+    /* if the current search index record is invalid(i.e. = {-1, -1})
+       (this only happens when the caller reset the search index)
+    */
+    if (prevRecId->block == -1 && prevRecId->slot == -1)
+    {
+        RelCatEntry* relCatBuf=(RelCatEntry*)malloc(sizeof(RelCatEntry));
+      RelCacheTable::getRelCatEntry(relId,relCatBuf);
+        // block = first record block of the relation
+        block=relCatBuf->firstBlk;
+        // slot = 0
+        slot=0;
+    }
+    else
+    {
+        block=prevRecId->block;
+        slot=prevRecId->slot+1;
+    }
+
+
+    // The following code finds the next record of the relation
+    /* Start from the record id (block, slot) and iterate over the remaining
+       records of the relation */
+    while (block != -1)
+    {
+         RecBuffer RecBuffer(block);
+
+          Attribute rec[RELCAT_NO_ATTRS];
+
+        // get the record with id (block, slot) using RecBuffer::getRecord()
+        RecBuffer.getRecord(rec,slot);
+        // get header of the block using RecBuffer::getHeader() function
+        HeadInfo header;
+        RecBuffer.getHeader(&header);
+        // get slot map of the block using RecBuffer::getSlotMap() function
+        unsigned char slotMap[SLOTMAP_SIZE_RELCAT_ATTRCAT];
+        RecBuffer.getSlotMap(slotMap);
+
+        if(slot>=header.numSlots)
+        {
+            block=header.rblock;
+            // update slot = 0
+            slot=0;
+            continue;  
+        }
+        else if (slotMap[slot]==SLOT_UNOCCUPIED)
+        { // (i.e slot-th entry in slotMap contains SLOT_UNOCCUPIED)
+
+            // increment slot
+            slot++;
+          if (slot >= header.numSlots) {  // ensure slot is within bounds
+        block = header.rblock;  // move to the next block
+        slot = 0;
+    }
+          continue;
+        }
+        else {
+            // (the next occupied slot / record has been found)
+            break;
+        }
+    }
+
+    if (block == -1){
+        // (a record was not found. all records exhausted)
+        return E_NOTFOUND;
+    }
+
+    // declare nextRecId to store the RecId of the record found
+                    RecId* nextRecId=(RecId*)malloc(sizeof(RecId));
+ nextRecId->block=block;
+                nextRecId->slot=slot;
+
+             RelCacheTable::setSearchIndex(relId,nextRecId);
+    // set the search index to nextRecId using RelCacheTable::setSearchIndex
+
+    /* Copy the record with record id (nextRecId) to the record buffer (record)
+       For this Instantiate a RecBuffer class object by passing the recId and
+       call the appropriate method to fetch the record
+    */
+    RecBuffer recordBlockBuffer (block);
+   recordBlockBuffer.getRecord(record, slot);
+
+    return SUCCESS;
+}
