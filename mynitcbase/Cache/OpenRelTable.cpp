@@ -472,16 +472,37 @@ int OpenRelTable::closeRel(int relId) {
   if (relId < 0 || relId >= MAX_OPEN) {
     return E_OUTOFBOUND;  // Invalid relId
   }
+if (RelCacheTable::relCache[relId] && RelCacheTable::relCache[relId]->dirty) {
+        Attribute relCatBuffer[RELCAT_NO_ATTRS];
 
+        // Convert relCatEntry to record
+        RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[relId]->relCatEntry), relCatBuffer);
+
+        // Write back using RecBuffer
+        RecId recId = RelCacheTable::relCache[relId]->recId;
+        RecBuffer relCatBlock(recId.block);
+        relCatBlock.setRecord(relCatBuffer, recId.slot);
+    }
+
+    // Free relation cache entry safely
+    if (RelCacheTable::relCache[relId]) {
+        free(RelCacheTable::relCache[relId]);
+        RelCacheTable::relCache[relId] = nullptr;  // Avoid dangling pointer
+    }
+
+    // Free attribute cache linked list safely
+    AttrCacheEntry *head = AttrCacheTable::attrCache[relId];
+    while (head) {
+        AttrCacheEntry *next = head->next;
+        free(head);
+        head = next;
+    }
   // Check if the relation is not open (i.e., it corresponds to a free slot)
   if (tableMetaInfo[relId].free==true) {
     return E_RELNOTOPEN;  // Relation is not open
   }
 
-  // Free the memory allocated for relation and attribute caches
-  // Assuming relCache and attrCache are arrays or pointers
- // Free the memory for attribute cache entry
-RelCacheTable::relCache[relId] = nullptr;
+  
     AttrCacheTable::attrCache[relId] = nullptr;
   // Update tableMetaInfo to set relId as a free slot
   tableMetaInfo[relId].free=true;
@@ -519,7 +540,7 @@ OpenRelTable::~OpenRelTable()
 	// free all the memory that you allocated in the constructor
 
 	//? close all open relations (from rel-id = 2 onwards. Why?)
-	for (int i = 2; i < MAX_OPEN; ++i)
+	for (int i = 2; i < MAX_OPEN; i++)
 		if (!tableMetaInfo[i].free)
 			OpenRelTable::closeRel(i); // we will implement this function later
 

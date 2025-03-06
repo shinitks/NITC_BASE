@@ -152,7 +152,7 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr) {
   // check whether the block is already present in the buffer using StaticBuffer.getBufferNum()
   int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
 
-  if (bufferNum == E_BLOCKNOTINBUFFER) {
+  if (bufferNum == E_BLOCKNOTINBUFFER ||bufferNum == E_OUTOFBOUND) {
     bufferNum = StaticBuffer::getFreeBuffer(this->blockNum);
 
     if (bufferNum == E_OUTOFBOUND) {
